@@ -11,7 +11,7 @@ export interface LogEntry {
   message: {
     id?: string;
     role: string;
-    content: Array<{
+    content: string | Array<{
       type: string;
       text?: string;
       name?: string;

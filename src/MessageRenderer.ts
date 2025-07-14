@@ -47,11 +47,16 @@ export class MessageRenderer {
   private async renderUserMessage(entry: LogEntry): Promise<void> {
     process.stdout.write(chalk.blue('👤 User: '));
     
-    for (const content of entry.message.content) {
-      if (content.type === 'text' && content.text) {
-        console.log(chalk.cyan(content.text));
-      } else if (content.type === 'tool_result') {
-        console.log(chalk.gray('📥 Tool result received'));
+    // contentが文字列の場合と配列の場合の両方に対応
+    if (typeof entry.message.content === 'string') {
+      console.log(chalk.cyan(entry.message.content));
+    } else if (Array.isArray(entry.message.content)) {
+      for (const content of entry.message.content) {
+        if (content.type === 'text' && content.text) {
+          console.log(chalk.cyan(content.text));
+        } else if (content.type === 'tool_result') {
+          console.log(chalk.gray('📥 Tool result received'));
+        }
       }
     }
   }
@@ -59,19 +64,22 @@ export class MessageRenderer {
   private async renderAssistantMessage(entry: LogEntry): Promise<void> {
     process.stdout.write(chalk.green('🤖 Assistant: '));
     
-    for (const content of entry.message.content) {
-      if (content.type === 'text' && content.text) {
-        if (this.streamingEnabled) {
-          await this.streaming.printLines(content.text);
-          console.log(); // 最後に改行
-        } else {
-          console.log(content.text);
-        }
-      } else if (content.type === 'tool_use') {
-        console.log(chalk.yellow(`\n🔧 Using tool: ${content.name}`));
-        if (content.input) {
-          const inputStr = JSON.stringify(content.input, null, 2);
-          console.log(chalk.gray(inputStr));
+    // アシスタントのメッセージは常に配列形式
+    if (Array.isArray(entry.message.content)) {
+      for (const content of entry.message.content) {
+        if (content.type === 'text' && content.text) {
+          if (this.streamingEnabled) {
+            await this.streaming.printLines(content.text);
+            console.log(); // 最後に改行
+          } else {
+            console.log(content.text);
+          }
+        } else if (content.type === 'tool_use') {
+          console.log(chalk.yellow(`\n🔧 Using tool: ${content.name}`));
+          if (content.input) {
+            const inputStr = JSON.stringify(content.input, null, 2);
+            console.log(chalk.gray(inputStr));
+          }
         }
       }
     }
