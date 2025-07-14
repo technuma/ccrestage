@@ -12,6 +12,7 @@ program
   .argument('<logfile>', 'Path to the JSONL log file')
   .option('-d, --delay <ms>', 'Delay between messages in milliseconds', '50')
   .option('-f, --filter <type>', 'Filter messages by type (user/assistant)')
+  .option('-s, --no-streaming', 'Disable streaming effect')
   .action(async (logfile: string, options: any) => {
     try {
       // ファイルの存在確認
@@ -32,6 +33,7 @@ program
 
       const renderer = new MessageRenderer();
       renderer.setDelay(parseInt(options.delay));
+      renderer.setStreamingEnabled(options.streaming);
 
       await renderer.renderAll(filteredEntries);
 

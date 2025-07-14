@@ -1,11 +1,23 @@
 import chalk from 'chalk';
 import { LogEntry } from './types';
+import { StreamingEffect } from './StreamingEffect';
 
 export class MessageRenderer {
-  private delay: number = 50; // デフォルトの遅延（ミリ秒）
+  private streaming: StreamingEffect;
+  private streamingEnabled: boolean = true;
+
+  constructor() {
+    this.streaming = new StreamingEffect();
+  }
+
+  setStreamingEnabled(enabled: boolean): void {
+    this.streamingEnabled = enabled;
+    this.streaming.setEnabled(enabled);
+  }
 
   setDelay(delay: number): void {
-    this.delay = delay;
+    // 互換性のため残す
+    this.streaming = new StreamingEffect(Math.floor(delay / 10), delay);
   }
 
   async renderAll(entries: LogEntry[]): Promise<void> {
@@ -33,58 +45,62 @@ export class MessageRenderer {
   }
 
   private async renderUserMessage(entry: LogEntry): Promise<void> {
-    console.log(chalk.blue('User: '));
+    process.stdout.write(chalk.blue('👤 User: '));
     
     for (const content of entry.message.content) {
       if (content.type === 'text' && content.text) {
-        console.log(content.text);
+        console.log(chalk.cyan(content.text));
       } else if (content.type === 'tool_result') {
-        console.log(chalk.gray('Tool result received'));
+        console.log(chalk.gray('📥 Tool result received'));
       }
     }
   }
 
   private async renderAssistantMessage(entry: LogEntry): Promise<void> {
-    console.log(chalk.green('Assistant: '));
+    process.stdout.write(chalk.green('🤖 Assistant: '));
     
     for (const content of entry.message.content) {
       if (content.type === 'text' && content.text) {
-        await this.printWithDelay(content.text);
+        if (this.streamingEnabled) {
+          await this.streaming.printLines(content.text);
+          console.log(); // 最後に改行
+        } else {
+          console.log(content.text);
+        }
       } else if (content.type === 'tool_use') {
-        console.log(chalk.yellow(`\nUsing tool: ${content.name}`));
+        console.log(chalk.yellow(`\n🔧 Using tool: ${content.name}`));
         if (content.input) {
-          console.log(chalk.gray(JSON.stringify(content.input, null, 2)));
+          const inputStr = JSON.stringify(content.input, null, 2);
+          console.log(chalk.gray(inputStr));
         }
       }
     }
   }
 
   private async renderToolResult(result: any): Promise<void> {
-    console.log(chalk.cyan('\nTool Result:'));
+    console.log(chalk.cyan('📊 Tool Result:'));
     
     if (result.stdout) {
       console.log(chalk.gray('Output:'));
-      console.log(result.stdout);
+      console.log(chalk.white(result.stdout));
     }
     
     if (result.stderr) {
       console.log(chalk.red('Error:'));
-      console.log(result.stderr);
+      console.log(chalk.red(result.stderr));
     }
     
     if (result.filePath) {
       console.log(chalk.gray(`File: ${result.filePath}`));
       if (result.type === 'create') {
-        console.log(chalk.green('✓ File created'));
+        console.log(chalk.green('✅ File created'));
       } else if (result.type === 'edit') {
-        console.log(chalk.yellow('✓ File edited'));
+        console.log(chalk.yellow('✏️  File edited'));
+        if (result.oldString && result.newString) {
+          console.log(chalk.red('- ' + result.oldString.substring(0, 50) + '...'));
+          console.log(chalk.green('+ ' + result.newString.substring(0, 50) + '...'));
+        }
       }
     }
-  }
-
-  private async printWithDelay(text: string): Promise<void> {
-    // シンプルなバージョン：一度に全文表示
-    // StreamingEffectクラスで改善予定
-    console.log(text);
   }
 }
