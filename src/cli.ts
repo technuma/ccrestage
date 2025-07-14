@@ -3,6 +3,7 @@
 import { program } from 'commander';
 import { LogReader } from './LogReader';
 import { MessageRenderer } from './MessageRenderer';
+import { PlaybackController } from './PlaybackController';
 import * as fs from 'fs/promises';
 
 program
@@ -13,6 +14,7 @@ program
   .option('-d, --delay <ms>', 'Delay between messages in milliseconds', '50')
   .option('-f, --filter <type>', 'Filter messages by type (user/assistant)')
   .option('-s, --no-streaming', 'Disable streaming effect')
+  .option('-i, --interactive', 'Enable interactive playback mode')
   .action(async (logfile: string, options: any) => {
     try {
       // ファイルの存在確認
@@ -35,9 +37,13 @@ program
       renderer.setDelay(parseInt(options.delay));
       renderer.setStreamingEnabled(options.streaming);
 
-      await renderer.renderAll(filteredEntries);
-
-      console.log('\n✅ Replay completed');
+      if (options.interactive) {
+        const controller = new PlaybackController(filteredEntries, renderer);
+        await controller.startInteractive();
+      } else {
+        await renderer.renderAll(filteredEntries);
+        console.log('\n✅ Replay completed');
+      }
     } catch (error) {
       console.error('Error:', error instanceof Error ? error.message : error);
       process.exit(1);
