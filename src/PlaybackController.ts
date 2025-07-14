@@ -98,6 +98,7 @@ export class PlaybackController {
       this.showProgress();
       await this.renderer.renderEntry(this.entries[this.currentIndex]);
       console.log();
+      console.log(chalk.gray('\n→キーで次へ、←キーで前へ、Spaceで自動再生、qで終了'));
     }
 
     while (this.currentIndex < this.entries.length) {
@@ -131,8 +132,9 @@ export class PlaybackController {
     const filled = Math.floor((progress / 100) * barLength);
     const bar = '█'.repeat(filled) + '░'.repeat(barLength - filled);
     
-    process.stdout.write('\r' + chalk.gray(`[${bar}] ${progress.toFixed(0)}% (${this.currentIndex + 1}/${this.entries.length}) | 速度: ${this.speed}x | ${this.autoPlay ? '自動再生中' : '手動モード'}`));
-    process.stdout.write('\n');
+    const statusLine = chalk.gray(`[${bar}] ${progress.toFixed(0)}% (${this.currentIndex + 1}/${this.entries.length}) | 速度: ${this.speed}x | ${this.autoPlay ? '自動再生中' : '手動モード'}`);
+    console.log(statusLine);
+    console.log(chalk.gray('─'.repeat(80))); // 区切り線
   }
 
   private toggleAutoPlay(): void {
@@ -151,6 +153,7 @@ export class PlaybackController {
       this.showProgress();
       await this.renderer.renderEntry(this.entries[this.currentIndex]);
       console.log();
+      console.log(chalk.gray('\n→キーで次へ、←キーで前へ、Spaceで自動再生、qで終了'));
     } else {
       console.log(chalk.yellow('\n📄 最後のメッセージです'));
     }
@@ -163,6 +166,7 @@ export class PlaybackController {
       this.showProgress();
       await this.renderer.renderEntry(this.entries[this.currentIndex]);
       console.log();
+      console.log(chalk.gray('\n→キーで次へ、←キーで前へ、Spaceで自動再生、qで終了'));
     } else {
       console.log(chalk.yellow('\n📄 最初のメッセージです'));
     }
