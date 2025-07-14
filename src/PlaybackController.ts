@@ -74,7 +74,7 @@ export class PlaybackController {
     console.log(chalk.white('  ↓         - 再生速度を下げる'));
     console.log(chalk.white('  h         - このヘルプを表示'));
     console.log(chalk.white('  q/Ctrl+C  - 終了'));
-    console.log(chalk.gray('\n任意のキーを押して続行...\n'));
+    console.log(chalk.white('\n任意のキーを押して続行...\n'));
     
     await this.waitForKeypress();
     console.clear();
@@ -98,7 +98,7 @@ export class PlaybackController {
       this.showProgress();
       await this.renderer.renderEntry(this.entries[this.currentIndex]);
       console.log();
-      console.log(chalk.gray('\n→キーで次へ、←キーで前へ、Spaceで自動再生、qで終了'));
+      console.log(chalk.white('\n→キーで次へ、←キーで前へ、Spaceで自動再生、qで終了'));
     }
 
     while (this.currentIndex < this.entries.length) {
@@ -132,9 +132,9 @@ export class PlaybackController {
     const filled = Math.floor((progress / 100) * barLength);
     const bar = '█'.repeat(filled) + '░'.repeat(barLength - filled);
     
-    const statusLine = chalk.gray(`[${bar}] ${progress.toFixed(0)}% (${this.currentIndex + 1}/${this.entries.length}) | 速度: ${this.speed}x | ${this.autoPlay ? '自動再生中' : '手動モード'}`);
+    const statusLine = chalk.white(`[${bar}] ${progress.toFixed(0)}% (${this.currentIndex + 1}/${this.entries.length}) | 速度: ${this.speed}x | ${this.autoPlay ? '自動再生中' : '手動モード'}`);
     console.log(statusLine);
-    console.log(chalk.gray('─'.repeat(80))); // 区切り線
+    console.log(chalk.white('─'.repeat(80))); // 区切り線
   }
 
   private toggleAutoPlay(): void {
@@ -153,7 +153,7 @@ export class PlaybackController {
       this.showProgress();
       await this.renderer.renderEntry(this.entries[this.currentIndex]);
       console.log();
-      console.log(chalk.gray('\n→キーで次へ、←キーで前へ、Spaceで自動再生、qで終了'));
+      console.log(chalk.white('\n→キーで次へ、←キーで前へ、Spaceで自動再生、qで終了'));
     } else {
       console.log(chalk.yellow('\n📄 最後のメッセージです'));
     }
@@ -166,7 +166,7 @@ export class PlaybackController {
       this.showProgress();
       await this.renderer.renderEntry(this.entries[this.currentIndex]);
       console.log();
-      console.log(chalk.gray('\n→キーで次へ、←キーで前へ、Spaceで自動再生、qで終了'));
+      console.log(chalk.white('\n→キーで次へ、←キーで前へ、Spaceで自動再生、qで終了'));
     } else {
       console.log(chalk.yellow('\n📄 最初のメッセージです'));
     }

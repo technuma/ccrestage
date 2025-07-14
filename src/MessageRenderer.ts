@@ -30,7 +30,7 @@ export class MessageRenderer {
   async renderEntry(entry: LogEntry): Promise<void> {
     // タイムスタンプの表示
     const time = new Date(entry.timestamp).toLocaleTimeString();
-    console.log(chalk.gray(`[${time}]`));
+    console.log(chalk.white(`[${time}]`));
 
     if (entry.type === 'user') {
       await this.renderUserMessage(entry);
@@ -55,7 +55,7 @@ export class MessageRenderer {
         if (content.type === 'text' && content.text) {
           console.log(chalk.cyan(content.text));
         } else if (content.type === 'tool_result') {
-          console.log(chalk.gray('📥 Tool result received'));
+          console.log(chalk.white('📥 Tool result received'));
         }
       }
     }
@@ -78,7 +78,7 @@ export class MessageRenderer {
           console.log(chalk.yellow(`\n🔧 Using tool: ${content.name}`));
           if (content.input) {
             const inputStr = JSON.stringify(content.input, null, 2);
-            console.log(chalk.gray(inputStr));
+            console.log(chalk.white(inputStr));
           }
         }
       }
@@ -89,7 +89,7 @@ export class MessageRenderer {
     console.log(chalk.cyan('📊 Tool Result:'));
     
     if (result.stdout) {
-      console.log(chalk.gray('Output:'));
+      console.log(chalk.white('Output:'));
       console.log(chalk.white(result.stdout));
     }
     
@@ -99,7 +99,7 @@ export class MessageRenderer {
     }
     
     if (result.filePath) {
-      console.log(chalk.gray(`File: ${result.filePath}`));
+      console.log(chalk.white(`File: ${result.filePath}`));
       if (result.type === 'create') {
         console.log(chalk.green('✅ File created'));
       } else if (result.type === 'edit') {
