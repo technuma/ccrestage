@@ -9,7 +9,7 @@ export class InteractiveFlowController {
   private isPaused: boolean = true;
   private speed: number = 1.0;
   private renderer: MessageRenderer;
-  private displayedCount: number = 0;
+  private displayedMessages: LogEntry[] = []; // 現在表示中のメッセージ
   private maxDisplayedMessages: number = 50; // 画面に表示する最大メッセージ数
 
   constructor(entries: LogEntry[], renderer: MessageRenderer) {
@@ -29,7 +29,8 @@ export class InteractiveFlowController {
     console.log(chalk.white('会話が通常モードのように流れていきます。'));
     console.log(chalk.white('古いメッセージは自動的に画面から消えます。\n'));
     console.log(chalk.yellow('操作方法:'));
-    console.log(chalk.white('  Enter/Space - 次のメッセージを表示'));
+    console.log(chalk.white('  →           - 次のメッセージを表示'));
+    console.log(chalk.white('  ←           - 前のメッセージを消す'));
     console.log(chalk.white('  a           - 自動再生ON/OFF'));
     console.log(chalk.white('  ↑/↓        - 再生速度調整'));
     console.log(chalk.white('  c           - 画面クリア'));
@@ -55,9 +56,11 @@ export class InteractiveFlowController {
       }
 
       switch (key.name) {
-        case 'return':
-        case 'space':
+        case 'right':
           await this.showNextMessage();
+          break;
+        case 'left':
+          await this.removePreviousMessage();
           break;
         case 'a':
           this.toggleAutoPlay();
@@ -69,9 +72,7 @@ export class InteractiveFlowController {
           this.decreaseSpeed();
           break;
         case 'c':
-          console.clear();
-          this.displayedCount = 0;
-          console.log(chalk.gray('画面をクリアしました'));
+          await this.clearScreen();
           break;
         case 'r':
           await this.restart();
@@ -115,16 +116,51 @@ export class InteractiveFlowController {
     }
   }
 
+  private async removePreviousMessage(): Promise<void> {
+    if (this.displayedMessages.length > 0) {
+      // 最後に表示したメッセージを削除
+      this.displayedMessages.pop();
+      
+      // 画面を再描画
+      await this.redrawScreen();
+      
+      console.log(chalk.yellow('\n前のメッセージを削除しました'));
+      this.showStatus();
+    } else {
+      console.log(chalk.yellow('\n削除するメッセージがありません'));
+    }
+  }
+
   private async displayMessage(index: number): Promise<void> {
-    // 画面の自動スクロール処理
-    if (this.displayedCount >= this.maxDisplayedMessages) {
-      // 画面を少し上にスクロール
-      process.stdout.write('\x1b[1S'); // 1行上にスクロール
+    const entry = this.entries[index];
+    
+    // メッセージを表示リストに追加
+    this.displayedMessages.push(entry);
+    
+    // 最大表示数を超えたら古いメッセージを削除
+    if (this.displayedMessages.length > this.maxDisplayedMessages) {
+      this.displayedMessages.shift();
     }
     
-    await this.renderer.renderEntry(this.entries[index]);
+    await this.renderer.renderEntry(entry);
     console.log(); // メッセージ間の空行
-    this.displayedCount++;
+  }
+
+  private async redrawScreen(): Promise<void> {
+    console.clear();
+    
+    // 表示中のメッセージをすべて再描画
+    for (const entry of this.displayedMessages) {
+      await this.renderer.renderEntry(entry);
+      console.log();
+    }
+  }
+
+  private async clearScreen(): Promise<void> {
+    console.clear();
+    this.displayedMessages = [];
+    console.log(chalk.gray('画面をクリアしました'));
+    this.showStatus();
   }
 
   private toggleAutoPlay(): void {
@@ -156,7 +192,7 @@ export class InteractiveFlowController {
   private async restart(): Promise<void> {
     console.clear();
     this.currentIndex = 0;
-    this.displayedCount = 0;
+    this.displayedMessages = [];
     console.log(chalk.cyan('🔄 最初から再生します\n'));
     await this.sleep(1000);
     this.showStatus();
@@ -170,8 +206,9 @@ export class InteractiveFlowController {
     
     const progress = ((this.currentIndex) / this.entries.length) * 100;
     const status = this.isPaused ? '⏸ 一時停止' : '▶️ 再生中';
+    const displayed = this.displayedMessages.length;
     const statusLine = chalk.bgGray.white(
-      ` ${status} | ${this.currentIndex}/${this.entries.length} (${progress.toFixed(0)}%) | 速度: ${this.speed}x | Enter:次へ a:自動再生 c:クリア q:終了 `
+      ` ${status} | ${this.currentIndex}/${this.entries.length} (${progress.toFixed(0)}%) | 表示中: ${displayed} | 速度: ${this.speed}x | →:次へ ←:削除 a:自動 q:終了 `
     );
     
     process.stdout.write(statusLine);
