@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
 import { program } from 'commander';
-import { LogReader } from './LogReader';
-import { MessageRenderer } from './MessageRenderer';
-import { PlaybackController } from './PlaybackController';
+import { LogReader } from './LogReader.ts';
+import { MessageRenderer } from './MessageRenderer.ts';
+import { PlaybackController } from './PlaybackController.ts';
 import * as fs from 'fs/promises';
 
 program

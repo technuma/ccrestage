@@ -28,7 +28,14 @@ npm install -g ccreplay
 
 基本的な使用:
 ```bash
+# Node.js版（ビルド必要）
 ccreplay <logfile.jsonl>
+
+# Deno版（ビルド不要、直接実行）
+deno run --allow-read ccreplay.ts <logfile.jsonl>
+
+# または実行権限を付与して
+./ccreplay.ts <logfile.jsonl>
 ```
 
 オプション:
@@ -133,6 +140,7 @@ await streaming.printLines("Line 1\nLine 2\nLine 3");
 
 ## 開発
 
+### Node.js版
 ```bash
 # 依存関係のインストール
 npm install
@@ -148,6 +156,19 @@ npm test
 
 # Linting
 npm run lint
+```
+
+### Deno版（ビルド不要）
+```bash
+# 直接実行
+deno run --allow-read ccreplay.ts <logfile.jsonl>
+
+# 開発モード（ファイル変更を監視）
+deno run --allow-read --allow-write --allow-env --watch ccreplay.ts <logfile.jsonl>
+
+# package.jsonのスクリプトを使用
+npm run deno -- <logfile.jsonl>
+npm run deno:dev -- <logfile.jsonl>
 ```
 
 ## ログファイル形式

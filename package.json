@@ -12,7 +12,9 @@
     "dev": "tsc --watch",
     "test": "jest",
     "lint": "eslint src/**/*.ts",
-    "prepare": "npm run build"
+    "prepare": "npm run build",
+    "deno": "deno run --allow-read --allow-write --allow-env ccreplay.ts",
+    "deno:dev": "deno run --allow-read --allow-write --allow-env --watch ccreplay.ts"
   },
   "keywords": [
     "claude",

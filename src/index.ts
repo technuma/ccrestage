@@ -1,5 +1,5 @@
-export * from './types';
-export { LogReader } from './LogReader';
-export { MessageRenderer } from './MessageRenderer';
-export { StreamingEffect } from './StreamingEffect';
-export { PlaybackController } from './PlaybackController';
+export * from './types.ts';
+export { LogReader } from './LogReader.ts';
+export { MessageRenderer } from './MessageRenderer.ts';
+export { StreamingEffect } from './StreamingEffect.ts';
+export { PlaybackController } from './PlaybackController.ts';

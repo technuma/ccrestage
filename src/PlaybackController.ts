@@ -1,7 +1,7 @@
 import * as readline from 'readline';
 import chalk from 'chalk';
-import { LogEntry } from './types';
-import { MessageRenderer } from './MessageRenderer';
+import { LogEntry } from './types.ts';
+import { MessageRenderer } from './MessageRenderer.ts';
 
 export class PlaybackController {
   private entries: LogEntry[] = [];

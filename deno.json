@@ -1,0 +1,19 @@
+{
+  "tasks": {
+    "dev": "deno run --allow-read --allow-write --allow-env --watch mod.ts",
+    "start": "deno run --allow-read --allow-write --allow-env mod.ts",
+    "cli": "deno run --allow-read --allow-write --allow-env src/cli.ts"
+  },
+  "imports": {
+    "chalk": "npm:chalk@5.3.0",
+    "commander": "npm:commander@12.1.0",
+    "readline": "node:readline",
+    "fs": "node:fs",
+    "fs/promises": "node:fs/promises"
+  },
+  "compilerOptions": {
+    "allowJs": true,
+    "lib": ["deno.window"],
+    "strict": true
+  }
+}

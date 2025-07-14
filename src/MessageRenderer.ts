@@ -1,6 +1,6 @@
 import chalk from 'chalk';
-import { LogEntry } from './types';
-import { StreamingEffect } from './StreamingEffect';
+import { LogEntry } from './types.ts';
+import { StreamingEffect } from './StreamingEffect.ts';
 
 export class MessageRenderer {
   private streaming: StreamingEffect;
