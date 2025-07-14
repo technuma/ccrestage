@@ -41,7 +41,7 @@ export class MessageRenderer {
   }
 
   private async renderUserMessage(entry: LogEntry): Promise<void> {
-    process.stdout.write(chalk.gray('> '));
+    process.stdout.write(chalk.white('> '));
     
     // contentが文字列の場合と配列の場合の両方に対応
     if (typeof entry.message.content === 'string') {
@@ -71,7 +71,7 @@ export class MessageRenderer {
               await this.streaming.printLines(content.text);
               console.log(); // 最後に改行
             } else {
-              console.log(content.text);
+              console.log(chalk.white(content.text));
             }
           }
         } else if (content.type === 'tool_use') {
@@ -98,7 +98,7 @@ export class MessageRenderer {
       case 'MultiEdit':
         console.log(chalk.white(`Update(${input.file_path})`));
         if (input.old_string && input.new_string) {
-          console.log(chalk.gray('  ⎿  ') + chalk.white(`Updated ${input.file_path} with modifications`));
+          console.log(chalk.white('  ⎿  ') + chalk.white(`Updated ${input.file_path} with modifications`));
           
           // 簡略化された差分表示
           const oldLines = input.old_string.split('\n');
@@ -110,8 +110,8 @@ export class MessageRenderer {
           
           for (let i = 0; i < Math.min(maxLines, Math.max(oldLines.length, newLines.length)); i++) {
             if (i < oldLines.length && i < newLines.length && oldLines[i] !== newLines[i]) {
-              console.log(chalk.gray(`       ${lineNum + i} `) + chalk.red(`-              ${oldLines[i].trim()}`));
-              console.log(chalk.gray(`       ${lineNum + i} `) + chalk.green(`+              ${newLines[i].trim()}`));
+              console.log(chalk.white(`       ${lineNum + i} `) + chalk.red(`-              ${oldLines[i].trim()}`));
+              console.log(chalk.white(`       ${lineNum + i} `) + chalk.green(`+              ${newLines[i].trim()}`));
             }
           }
         }
@@ -119,13 +119,13 @@ export class MessageRenderer {
         
       case 'Write':
         console.log(chalk.white(`Write(${input.file_path})`));
-        console.log(chalk.gray('  ⎿  ') + chalk.white(`Created ${input.file_path}`));
+        console.log(chalk.white('  ⎿  ') + chalk.white(`Created ${input.file_path}`));
         break;
         
       case 'Bash':
         console.log(chalk.white(`Run command: ${input.command}`));
         if (input.description) {
-          console.log(chalk.gray('  ⎿  ') + chalk.white(input.description));
+          console.log(chalk.white('  ⎿  ') + chalk.white(input.description));
         }
         break;
         
@@ -141,18 +141,18 @@ export class MessageRenderer {
   private async renderToolResult(result: any): Promise<void> {
     // Claude Codeスタイルでは、ツール実行結果は最小限の表示
     if (result.stdout && result.stdout.trim()) {
-      console.log(chalk.gray('  ⎿  Output:'));
+      console.log(chalk.white('  ⎿  Output:'));
       const lines = result.stdout.trim().split('\n');
       lines.forEach((line: string) => {
-        console.log(chalk.gray('     ') + chalk.white(line));
+        console.log(chalk.white('     ') + chalk.white(line));
       });
     }
     
     if (result.stderr && result.stderr.trim()) {
-      console.log(chalk.gray('  ⎿  ') + chalk.red('Error:'));
+      console.log(chalk.white('  ⎿  ') + chalk.red('Error:'));
       const lines = result.stderr.trim().split('\n');
       lines.forEach((line: string) => {
-        console.log(chalk.gray('     ') + chalk.red(line));
+        console.log(chalk.white('     ') + chalk.red(line));
       });
     }
   }

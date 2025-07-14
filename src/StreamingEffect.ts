@@ -1,3 +1,5 @@
+import chalk from 'chalk';
+
 export class StreamingEffect {
   private delay: number;
   private wordDelay: number;
@@ -14,7 +16,7 @@ export class StreamingEffect {
 
   async print(text: string): Promise<void> {
     if (!this.enabled) {
-      process.stdout.write(text);
+      process.stdout.write(chalk.white(text));
       return;
     }
 
@@ -25,7 +27,7 @@ export class StreamingEffect {
       
       // 単語内の文字を高速表示
       for (const char of word) {
-        process.stdout.write(char);
+        process.stdout.write(chalk.white(char));
         await this.sleep(this.delay);
       }
       
