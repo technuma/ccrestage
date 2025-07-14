@@ -6,10 +6,11 @@ import { MessageRenderer } from './MessageRenderer';
 export class PlaybackController {
   private entries: LogEntry[] = [];
   private currentIndex: number = 0;
-  private isPaused: boolean = false;
+  private isPaused: boolean = true;  // デフォルトで一時停止
   private speed: number = 1.0;
   private renderer: MessageRenderer;
   private rl?: readline.Interface;
+  private autoPlay: boolean = false;  // 自動再生モード
 
   constructor(entries: LogEntry[], renderer: MessageRenderer) {
     this.entries = entries;
@@ -19,6 +20,7 @@ export class PlaybackController {
   async startInteractive(): Promise<void> {
     this.setupKeyboardHandlers();
     await this.showHelp();
+    console.log(chalk.yellow('\n⏸  一時停止中 - Spaceキーで再生、→キーで次へ\n'));
     await this.playFromIndex(0);
   }
 
@@ -37,13 +39,13 @@ export class PlaybackController {
 
       switch (key.name) {
         case 'space':
-          this.togglePause();
+          this.toggleAutoPlay();
           break;
         case 'right':
-          this.skipForward();
+          await this.nextMessage();
           break;
         case 'left':
-          this.skipBackward();
+          await this.previousMessage();
           break;
         case 'up':
           this.increaseSpeed();
@@ -65,14 +67,14 @@ export class PlaybackController {
   private async showHelp(): Promise<void> {
     console.clear();
     console.log(chalk.cyan('🎮 Interactive Playback Controls:\n'));
-    console.log(chalk.white('  Space     - Pause/Resume'));
-    console.log(chalk.white('  →         - Skip to next message'));
-    console.log(chalk.white('  ←         - Skip to previous message'));
-    console.log(chalk.white('  ↑         - Increase speed'));
-    console.log(chalk.white('  ↓         - Decrease speed'));
-    console.log(chalk.white('  h         - Show this help'));
-    console.log(chalk.white('  q/Ctrl+C  - Quit'));
-    console.log(chalk.gray('\nPress any key to continue...\n'));
+    console.log(chalk.white('  →         - 次のメッセージを表示'));
+    console.log(chalk.white('  ←         - 前のメッセージに戻る'));
+    console.log(chalk.white('  Space     - 自動再生ON/OFF'));
+    console.log(chalk.white('  ↑         - 再生速度を上げる'));
+    console.log(chalk.white('  ↓         - 再生速度を下げる'));
+    console.log(chalk.white('  h         - このヘルプを表示'));
+    console.log(chalk.white('  q/Ctrl+C  - 終了'));
+    console.log(chalk.gray('\n任意のキーを押して続行...\n'));
     
     await this.waitForKeypress();
     console.clear();
@@ -91,24 +93,36 @@ export class PlaybackController {
   private async playFromIndex(startIndex: number): Promise<void> {
     this.currentIndex = startIndex;
 
+    // 最初のメッセージを表示
+    if (this.currentIndex < this.entries.length) {
+      this.showProgress();
+      await this.renderer.renderEntry(this.entries[this.currentIndex]);
+      console.log();
+    }
+
     while (this.currentIndex < this.entries.length) {
-      if (this.isPaused) {
+      // 自動再生がOFFの場合は待機
+      if (!this.autoPlay) {
         await this.sleep(100);
         continue;
       }
 
+      // 次のメッセージに進む
+      this.currentIndex++;
+      if (this.currentIndex >= this.entries.length) break;
+
       this.showProgress();
       await this.renderer.renderEntry(this.entries[this.currentIndex]);
       console.log();
-
-      this.currentIndex++;
       
       // 速度に応じた待機
       await this.sleep(1000 / this.speed);
     }
 
-    console.log(chalk.green('\n✅ Playback completed!'));
-    this.cleanup();
+    if (this.currentIndex >= this.entries.length) {
+      console.log(chalk.green('\n✅ 再生完了！'));
+      this.cleanup();
+    }
   }
 
   private showProgress(): void {
@@ -117,30 +131,40 @@ export class PlaybackController {
     const filled = Math.floor((progress / 100) * barLength);
     const bar = '█'.repeat(filled) + '░'.repeat(barLength - filled);
     
-    process.stdout.write('\r' + chalk.gray(`[${bar}] ${progress.toFixed(0)}% | Speed: ${this.speed}x | ${this.isPaused ? 'PAUSED' : 'PLAYING'}`));
+    process.stdout.write('\r' + chalk.gray(`[${bar}] ${progress.toFixed(0)}% (${this.currentIndex + 1}/${this.entries.length}) | 速度: ${this.speed}x | ${this.autoPlay ? '自動再生中' : '手動モード'}`));
     process.stdout.write('\n');
   }
 
-  private togglePause(): void {
-    this.isPaused = !this.isPaused;
-    if (this.isPaused) {
-      console.log(chalk.yellow('\n⏸  Paused'));
+  private toggleAutoPlay(): void {
+    this.autoPlay = !this.autoPlay;
+    if (this.autoPlay) {
+      console.log(chalk.green('\n▶️  自動再生ON'));
     } else {
-      console.log(chalk.green('\n▶️  Resumed'));
+      console.log(chalk.yellow('\n⏸  手動モード（→キーで次へ）'));
     }
   }
 
-  private skipForward(): void {
+  private async nextMessage(): Promise<void> {
     if (this.currentIndex < this.entries.length - 1) {
       this.currentIndex++;
-      console.log(chalk.blue('\n⏭  Skipped forward'));
+      console.clear();
+      this.showProgress();
+      await this.renderer.renderEntry(this.entries[this.currentIndex]);
+      console.log();
+    } else {
+      console.log(chalk.yellow('\n📄 最後のメッセージです'));
     }
   }
 
-  private skipBackward(): void {
+  private async previousMessage(): Promise<void> {
     if (this.currentIndex > 0) {
-      this.currentIndex -= 2; // 現在のを含めて2つ戻る
-      console.log(chalk.blue('\n⏮  Skipped backward'));
+      this.currentIndex--;
+      console.clear();
+      this.showProgress();
+      await this.renderer.renderEntry(this.entries[this.currentIndex]);
+      console.log();
+    } else {
+      console.log(chalk.yellow('\n📄 最初のメッセージです'));
     }
   }
 
