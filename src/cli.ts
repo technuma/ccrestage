@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 
 import { program } from 'commander';
-import { LogReader } from './LogReader.ts';
-import { MessageRenderer } from './MessageRenderer.ts';
-import { PlaybackController } from './PlaybackController.ts';
+import { LogReader } from './LogReader';
+import { MessageRenderer } from './MessageRenderer';
+import { PlaybackController } from './PlaybackController';
+import { InteractiveFlowController } from './InteractiveFlowController';
 import * as fs from 'fs/promises';
 
 program
@@ -14,7 +15,8 @@ program
   .option('-d, --delay <ms>', 'Delay between messages in milliseconds', '50')
   .option('-f, --filter <type>', 'Filter messages by type (user/assistant)')
   .option('-s, --no-streaming', 'Disable streaming effect')
-  .option('-i, --interactive', 'Enable interactive playback mode')
+  .option('-i, --interactive', 'Enable interactive playback mode (navigate messages)')
+  .option('-I, --interactive-flow', 'Enable interactive flow mode (continuous display)')
   .action(async (logfile: string, options: any) => {
     try {
       // ファイルの存在確認
@@ -40,6 +42,9 @@ program
       if (options.interactive) {
         const controller = new PlaybackController(filteredEntries, renderer);
         await controller.startInteractive();
+      } else if (options.interactiveFlow) {
+        const flowController = new InteractiveFlowController(filteredEntries, renderer);
+        await flowController.startInteractiveFlow();
       } else {
         await renderer.renderAll(filteredEntries);
         console.log('\n✅ Replay completed');

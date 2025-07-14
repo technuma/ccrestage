@@ -1,7 +1,7 @@
 import * as fs from 'fs/promises';
 import * as readline from 'readline';
 import { createReadStream } from 'fs';
-import { LogEntry } from './types.ts';
+import { LogEntry } from './types';
 
 export class LogReader {
   private entries: LogEntry[] = [];
