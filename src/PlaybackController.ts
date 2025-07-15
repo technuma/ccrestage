@@ -96,8 +96,10 @@ export class PlaybackController {
     // 最初のメッセージを表示
     if (this.currentIndex < this.entries.length) {
       this.showProgress();
-      await this.renderer.renderEntry(this.entries[this.currentIndex]);
-      console.log();
+      const rendered = await this.renderer.renderEntry(this.entries[this.currentIndex]);
+      if (rendered) {
+        console.log();
+      }
       console.log(chalk.white('\n→キーで次へ、←キーで前へ、Spaceで自動再生、qで終了'));
     }
 
@@ -113,8 +115,10 @@ export class PlaybackController {
       if (this.currentIndex >= this.entries.length) break;
 
       this.showProgress();
-      await this.renderer.renderEntry(this.entries[this.currentIndex]);
-      console.log();
+      const rendered = await this.renderer.renderEntry(this.entries[this.currentIndex]);
+      if (rendered) {
+        console.log();
+      }
       
       // 速度に応じた待機
       await this.sleep(1000 / this.speed);
@@ -151,8 +155,10 @@ export class PlaybackController {
       this.currentIndex++;
       console.clear();
       this.showProgress();
-      await this.renderer.renderEntry(this.entries[this.currentIndex]);
-      console.log();
+      const rendered = await this.renderer.renderEntry(this.entries[this.currentIndex]);
+      if (rendered) {
+        console.log();
+      }
       console.log(chalk.white('\n→キーで次へ、←キーで前へ、Spaceで自動再生、qで終了'));
     } else {
       console.log(chalk.yellow('\n📄 最後のメッセージです'));
@@ -164,8 +170,10 @@ export class PlaybackController {
       this.currentIndex--;
       console.clear();
       this.showProgress();
-      await this.renderer.renderEntry(this.entries[this.currentIndex]);
-      console.log();
+      const rendered = await this.renderer.renderEntry(this.entries[this.currentIndex]);
+      if (rendered) {
+        console.log();
+      }
       console.log(chalk.white('\n→キーで次へ、←キーで前へ、Spaceで自動再生、qで終了'));
     } else {
       console.log(chalk.yellow('\n📄 最初のメッセージです'));

@@ -8,6 +8,7 @@ export class LogReader {
 
   async read(filePath: string): Promise<LogEntry[]> {
     this.entries = [];
+    const rawEntries: LogEntry[] = [];
     
     try {
       await fs.access(filePath);
@@ -25,12 +26,15 @@ export class LogReader {
       if (line.trim()) {
         try {
           const entry = JSON.parse(line) as LogEntry;
-          this.entries.push(entry);
+          rawEntries.push(entry);
         } catch (error) {
           console.warn(`Failed to parse line: ${line}`);
         }
       }
     }
+
+    // アシスタントメッセージのマージ処理
+    this.entries = this.mergeAssistantMessages(rawEntries);
 
     return this.entries;
   }
@@ -55,5 +59,34 @@ export class LogReader {
     return [...this.entries].sort((a, b) => 
       new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
     );
+  }
+
+  private mergeAssistantMessages(entries: LogEntry[]): LogEntry[] {
+    const merged: LogEntry[] = [];
+    const assistantMap = new Map<string, LogEntry>();
+
+    for (const entry of entries) {
+      if (entry.type === 'assistant' && entry.message.id) {
+        const messageId = entry.message.id;
+        const existing = assistantMap.get(messageId);
+        
+        if (existing && Array.isArray(existing.message.content) && Array.isArray(entry.message.content)) {
+          // 同じメッセージIDのアシスタントエントリをマージ
+          existing.message.content = [...existing.message.content, ...entry.message.content];
+          // 最新のタイムスタンプとUUIDを使用
+          existing.timestamp = entry.timestamp;
+          existing.uuid = entry.uuid;
+        } else {
+          // 新しいメッセージIDの場合
+          assistantMap.set(messageId, entry);
+          merged.push(entry);
+        }
+      } else {
+        // アシスタント以外のメッセージはそのまま追加
+        merged.push(entry);
+      }
+    }
+
+    return merged;
   }
 }

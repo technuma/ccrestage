@@ -10,6 +10,10 @@ export class MessageRenderer {
     this.streaming = new StreamingEffect();
   }
 
+  getStreamingEffect(): StreamingEffect {
+    return this.streaming;
+  }
+
   setStreamingEnabled(enabled: boolean): void {
     this.streamingEnabled = enabled;
     this.streaming.setEnabled(enabled);
@@ -22,39 +26,66 @@ export class MessageRenderer {
 
   async renderAll(entries: LogEntry[]): Promise<void> {
     for (const entry of entries) {
-      await this.renderEntry(entry);
-      console.log(); // エントリ間の改行
+      const rendered = await this.renderEntry(entry);
+      if (rendered) {
+        console.log(); // エントリ間の改行
+      }
     }
   }
 
-  async renderEntry(entry: LogEntry): Promise<void> {
+  async renderEntry(entry: LogEntry): Promise<boolean> {
+    let rendered = false;
+    
     if (entry.type === 'user') {
-      await this.renderUserMessage(entry);
+      rendered = await this.renderUserMessage(entry);
     } else if (entry.type === 'assistant') {
       await this.renderAssistantMessage(entry);
+      rendered = true;
     }
 
     // ツール実行結果がある場合
-    if (entry.toolUseResult) {
+    // ただし、ユーザーメッセージでtool_resultのみの場合は除く
+    if (entry.toolUseResult && rendered) {
       await this.renderToolResult(entry.toolUseResult);
     }
+    
+    return rendered;
   }
 
-  private async renderUserMessage(entry: LogEntry): Promise<void> {
-    process.stdout.write(chalk.white('> '));
-    
+  private async renderUserMessage(entry: LogEntry): Promise<boolean> {
     // contentが文字列の場合と配列の場合の両方に対応
     if (typeof entry.message.content === 'string') {
+      process.stdout.write(chalk.white('> '));
       console.log(chalk.white(entry.message.content));
+      return true;
     } else if (Array.isArray(entry.message.content)) {
+      let hasText = false;
+      let hasToolResult = false;
+      
+      // まずコンテンツのタイプを確認
       for (const content of entry.message.content) {
         if (content.type === 'text' && content.text) {
-          console.log(chalk.white(content.text));
+          hasText = true;
         } else if (content.type === 'tool_result') {
-          // Tool resultは表示しない（Claude Codeの動作に合わせて）
+          hasToolResult = true;
         }
       }
+      
+      // テキストコンテンツがある場合のみ > を表示
+      if (hasText) {
+        process.stdout.write(chalk.white('> '));
+        for (const content of entry.message.content) {
+          if (content.type === 'text' && content.text) {
+            console.log(chalk.white(content.text));
+          }
+        }
+        return true;
+      } else if (hasToolResult && !hasText) {
+        // tool_resultのみの場合は何も表示しない（Claude Codeの仕様）
+        return false;
+      }
     }
+    return false;
   }
 
   private async renderAssistantMessage(entry: LogEntry): Promise<void> {
