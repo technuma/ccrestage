@@ -35,7 +35,7 @@ export class MessageRenderer {
 
   async renderEntry(entry: LogEntry): Promise<boolean> {
     let rendered = false;
-    
+
     if (entry.type === 'user') {
       rendered = await this.renderUserMessage(entry);
     } else if (entry.type === 'assistant') {
@@ -48,7 +48,7 @@ export class MessageRenderer {
     if (entry.toolUseResult && rendered) {
       await this.renderToolResult(entry.toolUseResult);
     }
-    
+
     return rendered;
   }
 
@@ -61,7 +61,7 @@ export class MessageRenderer {
     } else if (Array.isArray(entry.message.content)) {
       let hasText = false;
       let hasToolResult = false;
-      
+
       // まずコンテンツのタイプを確認
       for (const content of entry.message.content) {
         if (content.type === 'text' && content.text) {
@@ -70,7 +70,7 @@ export class MessageRenderer {
           hasToolResult = true;
         }
       }
-      
+
       // テキストコンテンツがある場合のみ > を表示
       if (hasText) {
         process.stdout.write(chalk.white('> '));
@@ -92,7 +92,7 @@ export class MessageRenderer {
     // アシスタントのメッセージは常に配列形式
     if (Array.isArray(entry.message.content)) {
       let hasToolUse = false;
-      
+
       for (const content of entry.message.content) {
         if (content.type === 'text' && content.text) {
           // テキストがある場合のみ⏺を表示
@@ -109,7 +109,7 @@ export class MessageRenderer {
           hasToolUse = true;
         }
       }
-      
+
       // ツール使用時の表示
       if (hasToolUse) {
         for (const content of entry.message.content) {
@@ -130,15 +130,15 @@ export class MessageRenderer {
         console.log(chalk.white(`Update(${input.file_path})`));
         if (input.old_string && input.new_string) {
           console.log(chalk.white('  ⎿  ') + chalk.white(`Updated ${input.file_path} with modifications`));
-          
+
           // 簡略化された差分表示
           const oldLines = input.old_string.split('\n');
           const newLines = input.new_string.split('\n');
-          
+
           // 最初の数行だけ表示
           const maxLines = 3;
           let lineNum = 78; // 例としての行番号
-          
+
           for (let i = 0; i < Math.min(maxLines, Math.max(oldLines.length, newLines.length)); i++) {
             if (i < oldLines.length && i < newLines.length && oldLines[i] !== newLines[i]) {
               console.log(chalk.white(`       ${lineNum + i} `) + chalk.red(`-              ${oldLines[i].trim()}`));
@@ -147,23 +147,34 @@ export class MessageRenderer {
           }
         }
         break;
-        
+
       case 'Write':
         console.log(chalk.white(`Write(${input.file_path})`));
         console.log(chalk.white('  ⎿  ') + chalk.white(`Created ${input.file_path}`));
         break;
-        
+
       case 'Bash':
         console.log(chalk.white(`Run command: ${input.command}`));
         if (input.description) {
           console.log(chalk.white('  ⎿  ') + chalk.white(input.description));
         }
         break;
-        
+
       case 'Read':
         console.log(chalk.white(`Read(${input.file_path})`));
         break;
-        
+
+      case 'TodoWrite':
+        console.log(chalk.white('Update Todos'));
+        if (input.todos && Array.isArray(input.todos)) {
+          input.todos.forEach((todo: any) => {
+            const checkbox = todo.status === 'completed' ? '☒' : '☐';
+            const indent = '  ⎿  ';
+            console.log(chalk.white(indent + checkbox + ' ' + todo.content));
+          });
+        }
+        break;
+
       default:
         console.log(chalk.white(`${toolName}(${JSON.stringify(input, null, 2)})`));
     }
@@ -178,7 +189,7 @@ export class MessageRenderer {
         console.log(chalk.white('     ') + chalk.white(line));
       });
     }
-    
+
     if (result.stderr && result.stderr.trim()) {
       console.log(chalk.white('  ⎿  ') + chalk.red('Error:'));
       const lines = result.stderr.trim().split('\n');
